@@ -1,0 +1,97 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cradle Driver Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="bg-noise"></div>
+  <div class="bg-orb orb-left"></div>
+  <div class="bg-orb orb-right"></div>
+
+  <main class="app-shell">
+    <header class="topbar glass">
+      <div>
+        <p class="eyebrow">CRADLE PARTNER</p>
+        <h1>Driver Console</h1>
+      </div>
+      <div class="status-pill"><span></span> live</div>
+    </header>
+
+    <section id="view-home" class="view active">
+      <article class="balance-card glass">
+        <div class="balance-head">
+          <p>Capital</p>
+          <button class="chip">Wallet</button>
+        </div>
+        <h2 id="balanceEtb">ETB 0.00</h2>
+        <p class="subtle">Secure settlement rail active</p>
+      </article>
+
+      <article class="module glass">
+        <div class="module-head">
+          <h3>Daily Missions</h3>
+          <p>Boost XP + rewards</p>
+        </div>
+        <div class="mission-list" id="missionList"></div>
+      </article>
+    </section>
+
+    <section id="view-rewards" class="view">
+      <article class="module glass">
+        <div class="module-head">
+          <h3>Quantum Spin</h3>
+          <p>1 roll every 10 trips</p>
+        </div>
+        <div class="wheel-wrap">
+          <div class="pointer"></div>
+          <div id="wheel" class="wheel">
+            <div class="seg s1">x1.0</div><div class="seg s2">x1.2</div><div class="seg s3">x1.5</div>
+            <div class="seg s4">x2.0</div><div class="seg s5">x0.8</div><div class="seg s6">x3.0</div>
+          </div>
+          <button id="spinBtn" class="spin-btn">ROLL</button>
+        </div>
+        <p id="spinResult" class="subtle">Ready to spin</p>
+      </article>
+
+      <article class="module glass">
+        <div class="module-head">
+          <h3>Trip Booster</h3>
+          <p><span id="tripCount">0</span>/10 trips to next roll</p>
+        </div>
+        <div class="bar"><div id="tripBar" class="bar-fill"></div></div>
+        <button id="addTripBtn" class="ghost">+1 demo trip</button>
+      </article>
+    </section>
+
+    <section id="view-tasks" class="view">
+      <article class="module glass">
+        <div class="module-head"><h3>Operational Clearance</h3><p>Driver dossier status</p></div>
+        <div id="clearanceList" class="clearance-list"></div>
+      </article>
+    </section>
+
+    <section id="view-profile" class="view">
+      <article class="module glass">
+        <div class="module-head"><h3>Admin Console</h3><p>High alert queue</p></div>
+        <div class="admin-card">
+          <p><strong>Driver:</strong> #2198</p><p><strong>Risk:</strong> Medium</p>
+          <div class="admin-actions"><button class="ghost">View Dossier</button><button class="danger">Authorize</button></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <nav class="floating-nav glass">
+    <button data-view="home" class="nav-btn active">Home</button>
+    <button data-view="tasks" class="nav-btn">Tasks</button>
+    <button data-view="rewards" class="nav-btn">Rewards</button>
+    <button data-view="profile" class="nav-btn">Profile</button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
