@@ -33,6 +33,23 @@
 
       <article class="module glass">
         <div class="module-head">
+          <h3>Operations Grid</h3>
+          <p>Core actions</p>
+        </div>
+        <div class="quick-grid">
+          <button class="quick-btn" data-action="upload">Upload Document</button>
+          <button class="quick-btn" data-action="rewards">Rewards</button>
+          <button class="quick-btn" data-action="topup">Top Up</button>
+          <button class="quick-btn" data-action="wallet">Wallet</button>
+          <button class="quick-btn" data-action="profile">Profile</button>
+          <button class="quick-btn" data-action="support">Support</button>
+          <button class="quick-btn span-2" data-action="faq">FAQ</button>
+          <button id="adminApproveBtn" class="quick-btn admin-only span-2" data-action="approve">Approve Documents</button>
+        </div>
+      </article>
+
+      <article class="module glass">
+        <div class="module-head">
           <h3>Daily Missions</h3>
           <p>Boost XP + rewards</p>
         </div>
@@ -74,8 +91,15 @@
       </article>
     </section>
 
-    <section id="view-profile" class="view">
+      <section id="view-profile" class="view">
       <article class="module glass">
+        <div class="module-head"><h3>Profile & Console</h3><p>Account + operations</p></div>
+        <div class="admin-card">
+          <p><strong>Name:</strong> Driver One</p>
+          <p><strong>Status:</strong> Active</p>
+        </div>
+      </article>
+      <article id="adminConsoleCard" class="module glass admin-only">
         <div class="module-head"><h3>Admin Console</h3><p>High alert queue</p></div>
         <div class="admin-card">
           <p><strong>Driver:</strong> #2198</p><p><strong>Risk:</strong> Medium</p>

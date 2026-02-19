@@ -6,6 +6,12 @@ if (tg) {
   tg.setBackgroundColor('#040406');
 }
 
+const params = new URLSearchParams(window.location.search);
+const role = params.get('role') === 'admin' ? 'admin' : 'driver';
+if (role === 'admin') {
+  document.body.classList.add('role-admin');
+}
+
 const state = {
   balance: 1120,
   tripCount: 10,
@@ -162,6 +168,62 @@ function initActions() {
     saveState();
   });
   els.spinBtn.addEventListener('click', spinWheel);
+
+  document.querySelectorAll('.quick-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+
+      if (action === 'upload') {
+        switchView('tasks');
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        return;
+      }
+      if (action === 'rewards') {
+        switchView('rewards');
+        return;
+      }
+      if (action === 'wallet') {
+        switchView('home');
+        els.spinResult.textContent = `Wallet balance: ${etb(state.balance)}`;
+        return;
+      }
+      if (action === 'profile') {
+        switchView('profile');
+        return;
+      }
+      if (action === 'topup') {
+        const value = window.prompt('Top up amount in ETB (demo):', '100');
+        if (!value) return;
+        const amount = Number(value);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          window.alert('Invalid amount');
+          return;
+        }
+        state.balance += amount;
+        renderBalance();
+        saveState();
+        els.spinResult.textContent = `Top-up success: +${etb(amount)}`;
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        return;
+      }
+      if (action === 'support') {
+        window.alert('Support: @cradlepartnersupport | 0924470000');
+        return;
+      }
+      if (action === 'faq') {
+        window.alert('FAQ:\\n1) Upload docs\\n2) Wait approval\\n3) Use rewards and top-up');
+        return;
+      }
+      if (action === 'approve') {
+        if (role !== 'admin') {
+          window.alert('Admin only');
+          return;
+        }
+        switchView('profile');
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      }
+    });
+  });
 }
 
 loadState();
