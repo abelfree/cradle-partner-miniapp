@@ -95,6 +95,14 @@ h1 { margin: 4px 0 0; font-size: 22px; }
   color: #fff; font-weight: 800; letter-spacing: .06em;
   background: radial-gradient(circle, #ff3c4f, #9d001a);
   box-shadow: 0 0 30px rgba(255,0,40,.6);
+  transition: transform .2s ease, opacity .2s ease;
+}
+.spin-btn:active { transform: scale(.97); }
+.spin-btn:disabled {
+  opacity: .55;
+  box-shadow: none;
+  background: radial-gradient(circle, #6f6a6a, #3a3636);
+  cursor: not-allowed;
 }
 
 .ghost, .danger {

@@ -8,7 +8,7 @@ if (tg) {
 
 const state = {
   balance: 1120,
-  tripCount: 3,
+  tripCount: 10,
   tripsPerRoll: 10,
   spinning: false,
   rotation: 0,
@@ -36,6 +36,30 @@ const els = {
   clearanceList: document.getElementById('clearanceList')
 };
 
+const multipliers = [1.0, 1.2, 1.5, 2.0, 0.8, 3.0];
+
+function loadState() {
+  try {
+    const raw = window.localStorage.getItem('cradleMiniState');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.balance === 'number') state.balance = parsed.balance;
+    if (typeof parsed.tripCount === 'number') state.tripCount = parsed.tripCount;
+    if (typeof parsed.rotation === 'number') state.rotation = parsed.rotation;
+  } catch (_) {}
+}
+
+function saveState() {
+  window.localStorage.setItem(
+    'cradleMiniState',
+    JSON.stringify({
+      balance: state.balance,
+      tripCount: state.tripCount,
+      rotation: state.rotation
+    })
+  );
+}
+
 function etb(v) {
   return `ETB ${v.toFixed(2)}`;
 }
@@ -59,6 +83,9 @@ function renderTrips() {
   els.tripCount.textContent = String(state.tripCount);
   const pct = Math.min(100, (state.tripCount / state.tripsPerRoll) * 100);
   els.tripBar.style.width = `${pct}%`;
+  const eligible = state.tripCount >= state.tripsPerRoll;
+  els.spinBtn.disabled = !eligible || state.spinning;
+  els.spinBtn.textContent = state.spinning ? 'ROLLING...' : (eligible ? 'ROLL' : `LOCKED ${state.tripCount}/${state.tripsPerRoll}`);
 }
 
 function renderBalance() {
@@ -93,12 +120,14 @@ function switchView(view) {
 function spinWheel() {
   if (state.spinning) return;
   if (state.tripCount < state.tripsPerRoll) {
-    els.spinResult.textContent = 'Need more trips to unlock roll';
+    els.spinResult.textContent = `Need ${state.tripsPerRoll - state.tripCount} more trips`;
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
     return;
   }
 
   state.spinning = true;
-  const multipliers = [1.0, 1.2, 1.5, 2.0, 0.8, 3.0];
+  renderTrips();
+  els.spinResult.textContent = 'Spinning...';
   const index = Math.floor(Math.random() * multipliers.length);
   const multiplier = multipliers[index];
   const segment = 360 / multipliers.length;
@@ -112,9 +141,10 @@ function spinWheel() {
     state.balance += reward;
     state.tripCount -= state.tripsPerRoll;
     renderBalance();
+    state.spinning = false;
     renderTrips();
     els.spinResult.textContent = `Win x${multiplier.toFixed(1)} -> +${etb(reward)}`;
-    state.spinning = false;
+    saveState();
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
   }, 4900);
 }
@@ -129,10 +159,13 @@ function initActions() {
   els.addTripBtn.addEventListener('click', () => {
     state.tripCount = Math.min(50, state.tripCount + 1);
     renderTrips();
+    saveState();
   });
   els.spinBtn.addEventListener('click', spinWheel);
 }
 
+loadState();
+els.wheel.style.transform = `rotate(${state.rotation}deg)`;
 renderBalance();
 renderMissions();
 renderTrips();
