@@ -253,12 +253,33 @@ function initActions() {
           amount_etb: amount,
           title: 'Cradle Wallet Top Up'
         };
+        const tunnelHeaders = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          // localtunnel anti-phishing page bypass
+          'bypass-tunnel-reminder': 'true'
+        };
+
+        const parseJsonOrThrow = async (response) => {
+          const raw = await response.text();
+          let data;
+          try {
+            data = JSON.parse(raw);
+          } catch (_) {
+            throw new Error(`Upstream returned non-JSON (${response.status})`);
+          }
+          if (!response.ok) {
+            throw new Error(data?.detail || `HTTP ${response.status}`);
+          }
+          return data;
+        };
+
         fetch(`${apiBase}/api/topup/initiate`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: tunnelHeaders,
           body: JSON.stringify(payload)
         })
-          .then((r) => r.json())
+          .then(parseJsonOrThrow)
           .then((data) => {
             if (!data.reference) {
               throw new Error(data.detail || 'Failed to start top-up');
@@ -271,7 +292,7 @@ function initActions() {
             const timer = setInterval(() => {
               attempts += 1;
               fetch(`${apiBase}/api/topup/status/${data.reference}`)
-                .then((r) => r.json())
+                .then((r) => parseJsonOrThrow(r))
                 .then((s) => {
                   if (s.status === 'successful') {
                     state.balance += amount;
