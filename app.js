@@ -13,6 +13,7 @@ const LOGIN_CODES = {
   admin: 'admin123',
   approver: 'approver123'
 };
+const apiBase = (params.get('apiBase') || '').trim().replace(/\/$/, '');
 
 const state = {
   balance: 1120,
@@ -236,11 +237,67 @@ function initActions() {
           window.alert('Invalid amount');
           return;
         }
-        state.balance += amount;
-        renderBalance();
-        saveState();
-        els.spinResult.textContent = `Top-up success: +${etb(amount)}`;
-        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        const telegramId = tg?.initDataUnsafe?.user?.id || 0;
+        if (!apiBase || !telegramId) {
+          state.balance += amount;
+          renderBalance();
+          saveState();
+          els.spinResult.textContent = `Top-up success: +${etb(amount)} (demo)`;
+          if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          return;
+        }
+
+        const payload = {
+          telegram_id: Number(telegramId),
+          amount_etb: amount,
+          title: 'Cradle Wallet Top Up'
+        };
+        fetch(`${apiBase}/api/topup/initiate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (!data.reference) {
+              throw new Error(data.detail || 'Failed to start top-up');
+            }
+            if (data.checkout_url) {
+              if (tg?.openLink) tg.openLink(data.checkout_url);
+              else window.open(data.checkout_url, '_blank');
+            }
+            let attempts = 0;
+            const timer = setInterval(() => {
+              attempts += 1;
+              fetch(`${apiBase}/api/topup/status/${data.reference}`)
+                .then((r) => r.json())
+                .then((s) => {
+                  if (s.status === 'successful') {
+                    state.balance += amount;
+                    renderBalance();
+                    saveState();
+                    els.spinResult.textContent = `Top-up success: +${etb(amount)}`;
+                    clearInterval(timer);
+                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                  } else if (s.status === 'failed') {
+                    els.spinResult.textContent = `Top-up failed: ${s.failure_reason || 'provider rejected'}`;
+                    clearInterval(timer);
+                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                  } else if (attempts >= 30) {
+                    els.spinResult.textContent = 'Top-up pending confirmation...';
+                    clearInterval(timer);
+                  }
+                })
+                .catch(() => {
+                  if (attempts >= 30) {
+                    clearInterval(timer);
+                  }
+                });
+            }, 3000);
+          })
+          .catch((err) => {
+            window.alert(`Top-up init error: ${err.message}`);
+          });
         return;
       }
       if (action === 'support') {
