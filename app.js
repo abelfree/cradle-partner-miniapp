@@ -230,7 +230,8 @@ function initActions() {
         return;
       }
       if (action === 'topup') {
-        const value = window.prompt('Top up amount in ETB (demo):', '100');
+        const modeLabel = (!apiBase || !tg?.initDataUnsafe?.user?.id) ? 'demo' : 'live';
+        const value = window.prompt(`Top up amount in ETB (${modeLabel}):`, '100');
         if (!value) return;
         const amount = Number(value);
         if (!Number.isFinite(amount) || amount <= 0) {
