@@ -8,6 +8,22 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card glass">
+      <p class="eyebrow">ACCESS CONTROL</p>
+      <h2>Role Login (Demo)</h2>
+      <p class="subtle">Select role and enter passcode for testing.</p>
+      <div class="login-roles">
+        <button class="login-role-btn active" data-role="driver">Driver</button>
+        <button class="login-role-btn" data-role="approver">Approver</button>
+        <button class="login-role-btn" data-role="admin">Admin</button>
+      </div>
+      <input id="loginCode" class="login-input" type="password" placeholder="Passcode (driver can be empty)" />
+      <button id="loginBtn" class="danger">Enter Console</button>
+      <p id="loginHint" class="subtle">Demo codes: approver123, admin123</p>
+    </div>
+  </div>
+
   <div class="bg-noise"></div>
   <div class="bg-orb orb-left"></div>
   <div class="bg-orb orb-right"></div>
@@ -18,7 +34,10 @@
         <p class="eyebrow">CRADLE PARTNER</p>
         <h1>Driver Console</h1>
       </div>
-      <div class="status-pill"><span></span> live</div>
+      <div class="top-actions">
+        <div class="status-pill"><span></span> live</div>
+        <button id="logoutBtn" class="chip">Logout</button>
+      </div>
     </header>
 
     <section id="view-home" class="view active">

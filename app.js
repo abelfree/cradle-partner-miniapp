@@ -7,10 +7,12 @@ if (tg) {
 }
 
 const params = new URLSearchParams(window.location.search);
-const role = params.get('role') === 'admin' ? 'admin' : 'driver';
-if (role === 'admin') {
-  document.body.classList.add('role-admin');
-}
+const rawRole = params.get('role');
+let role = (rawRole === 'admin' || rawRole === 'approver') ? rawRole : 'driver';
+const LOGIN_CODES = {
+  admin: 'admin123',
+  approver: 'approver123'
+};
 
 const state = {
   balance: 1120,
@@ -39,8 +41,23 @@ const els = {
   wheel: document.getElementById('wheel'),
   spinBtn: document.getElementById('spinBtn'),
   spinResult: document.getElementById('spinResult'),
-  clearanceList: document.getElementById('clearanceList')
+  clearanceList: document.getElementById('clearanceList'),
+  loginOverlay: document.getElementById('loginOverlay'),
+  loginBtn: document.getElementById('loginBtn'),
+  loginCode: document.getElementById('loginCode'),
+  loginHint: document.getElementById('loginHint'),
+  logoutBtn: document.getElementById('logoutBtn')
 };
+
+function canApprove() {
+  return role === 'admin' || role === 'approver';
+}
+
+function applyRoleUI() {
+  document.body.classList.toggle('role-admin', canApprove());
+  document.querySelector('h1').textContent =
+    role === 'admin' ? 'Admin Console' : (role === 'approver' ? 'Approver Console' : 'Driver Console');
+}
 
 const multipliers = [1.0, 1.2, 1.5, 2.0, 0.8, 3.0];
 
@@ -53,6 +70,15 @@ function loadState() {
     if (typeof parsed.tripCount === 'number') state.tripCount = parsed.tripCount;
     if (typeof parsed.rotation === 'number') state.rotation = parsed.rotation;
   } catch (_) {}
+  try {
+    const authRaw = window.sessionStorage.getItem('cradleMiniAuth');
+    if (authRaw) {
+      const parsed = JSON.parse(authRaw);
+      if (parsed && (parsed.role === 'driver' || parsed.role === 'approver' || parsed.role === 'admin')) {
+        role = parsed.role;
+      }
+    }
+  } catch (_) {}
 }
 
 function saveState() {
@@ -64,6 +90,17 @@ function saveState() {
       rotation: state.rotation
     })
   );
+}
+
+function saveAuth() {
+  window.sessionStorage.setItem(
+    'cradleMiniAuth',
+    JSON.stringify({ role })
+  );
+}
+
+function clearAuth() {
+  window.sessionStorage.removeItem('cradleMiniAuth');
 }
 
 function etb(v) {
@@ -215,7 +252,7 @@ function initActions() {
         return;
       }
       if (action === 'approve') {
-        if (role !== 'admin') {
+        if (!canApprove()) {
           window.alert('Admin only');
           return;
         }
@@ -224,9 +261,67 @@ function initActions() {
       }
     });
   });
+
+  els.logoutBtn?.addEventListener('click', () => {
+    clearAuth();
+    role = 'driver';
+    applyRoleUI();
+    els.loginCode.value = '';
+    els.loginHint.textContent = 'Demo codes: approver123, admin123';
+    els.loginOverlay.classList.remove('hidden');
+  });
+}
+
+function initLogin() {
+  const roleBtns = Array.from(document.querySelectorAll('.login-role-btn'));
+  let selectedRole = role;
+
+  const activate = (nextRole) => {
+    selectedRole = nextRole;
+    roleBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.role === nextRole));
+    if (nextRole === 'driver') {
+      els.loginHint.textContent = 'Driver role does not require passcode.';
+    } else if (nextRole === 'approver') {
+      els.loginHint.textContent = 'Approver demo code: approver123';
+    } else {
+      els.loginHint.textContent = 'Admin demo code: admin123';
+    }
+  };
+
+  roleBtns.forEach((btn) => {
+    btn.addEventListener('click', () => activate(btn.dataset.role));
+  });
+  activate(selectedRole);
+
+  const completeLogin = () => {
+    const code = (els.loginCode.value || '').trim();
+    if (selectedRole !== 'driver' && code !== LOGIN_CODES[selectedRole]) {
+      els.loginHint.textContent = 'Invalid passcode.';
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+      return;
+    }
+    role = selectedRole;
+    saveAuth();
+    applyRoleUI();
+    els.loginOverlay.classList.add('hidden');
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+  };
+
+  els.loginBtn.addEventListener('click', completeLogin);
+  els.loginCode.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') completeLogin();
+  });
+
+  if (window.sessionStorage.getItem('cradleMiniAuth')) {
+    applyRoleUI();
+    els.loginOverlay.classList.add('hidden');
+  } else {
+    els.loginOverlay.classList.remove('hidden');
+  }
 }
 
 loadState();
+applyRoleUI();
 els.wheel.style.transform = `rotate(${state.rotation}deg)`;
 renderBalance();
 renderMissions();
@@ -234,3 +329,4 @@ renderTrips();
 renderDocs();
 initNav();
 initActions();
+initLogin();
